@@ -1,0 +1,11 @@
+Model,MAE (log_spread),RMSE (log_spread),R2,Median Fee % Error
+XGBoost (Pseudo-Huber),0.5133,0.6588,0.2755,38.2338
+LightGBM (Huber),0.5157,0.6614,0.2698,38.1705
+HistGradientBoosting (MAE),0.5158,0.6634,0.2655,38.531
+CatBoost (Huber),0.5175,0.6633,0.2658,38.857
+Blend (30% Ridge + 70% LightGBM),0.5197,0.6659,0.2599,38.7758
+RandomForest,0.5273,0.6788,0.2309,38.9926
+HuberRegressor,0.5415,0.6932,0.1979,40.5729
+RidgeCV,0.5427,0.693,0.1985,40.6888
+ElasticNetCV,0.5428,0.6939,0.1963,40.4348
+Dummy (Median),0.6085,0.7965,-0.059,46.6288

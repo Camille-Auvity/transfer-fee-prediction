@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Logs générés automatiquement par CatBoost à l'entraînement
+catboost_info/
+
+# Données brutes volumineuses non utilisées par le pipeline
+# (téléchargeables depuis Kaggle, voir README.md)
+transfermarkt data/*
+!transfermarkt data/clubs.csv
+!transfermarkt data/players.csv
+!transfermarkt data/transfer_panel.csv

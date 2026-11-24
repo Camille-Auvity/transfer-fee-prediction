@@ -1,0 +1,11 @@
+Player,transfer_season,name_from,name_to,TM_Val (€M),Pred_Fee (€M),Actual_Fee (€M),TM_Err (%),Model_Err (%),Beat_TM
+Rocco Reitz,26/27,Borussia Mönchengladbach,RB Leipzig,20.0,14.44,20.0,0.0,27.8,False
+Edon Zhegrova,25/26,LOSC Lille,Juventus FC,25.0,21.46,15.5,61.29,38.43,True
+Luka Vuskovic,25/26,HNK Hajduk Split,Tottenham Hotspur,12.0,18.28,11.0,9.09,66.14,False
+Tobías Ramírez,25/26,Asociación Atlética Argentinos Juniors,Club Atlético River Plate,2.5,3.07,4.3,41.86,28.69,True
+Jemmes,25/26,Mirasol Futebol Clube,Fluminense Football Club,1.5,1.32,3.6,58.33,63.27,False
+Souleymane Faye,25/26,,Granada CF,0.5,0.98,3.6,86.11,72.79,True
+Vaclav Sejk,25/26,SC Heerenveen,"SK Sigma Olomouc, a.s.",0.9,1.13,1.8,50.0,37.01,True
+Redouane Berkane,25/26,,,0.8,0.65,0.65,23.08,0.24,True
+Noel Buck,24/25,New England Revolution,San Jose Earthquakes,2.0,1.72,0.53,277.36,224.67,True
+Iyad Mohamed,24/25,,Casa Pia AC,0.6,0.34,0.1,500.0,243.34,True

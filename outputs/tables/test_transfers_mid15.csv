@@ -1,0 +1,16 @@
+Player,transfer_season,name_from,name_to,TM_Val (€M),Pred_Fee (€M),Actual_Fee (€M),TM_Err (%),Model_Err (%),Beat_TM
+Sebastian Szymanski,25/26,Fenerbahce,Stade Rennais FC,12.0,8.14,9.5,26.32,14.36,True
+Weslley Patati,25/26,,AZ Alkmaar,2.5,2.31,7.3,65.75,68.36,False
+Alerrandro,24/25,Red Bull Bragantino,PFK CSKA Moskva,4.0,2.95,4.2,4.76,29.83,False
+Max Finkgräfe,25/26,1.FC Köln,RB Leipzig,4.0,3.72,4.0,0.0,7.09,False
+Juan Musso,25/26,Atalanta BC,Atlético de Madrid,3.5,2.79,3.0,16.67,6.92,True
+Mohamed Al-Thani,25/26,Al-Hazem Sport Club,Al-Qadsiah Saudi Football Club,0.9,1.66,2.55,64.71,34.73,True
+Alan Virginius,25/26,LOSC Lille,BSC Young Boys,3.0,2.74,2.5,20.0,9.65,True
+Moisés,25/26,Fortaleza Esporte Clube,Santos Futebol Clube,2.5,2.24,2.0,25.0,11.92,True
+Nesta Elphege,25/26,,Parma Calcio 1913,0.5,0.63,2.0,75.0,68.56,True
+Antoine Bernede,25/26,Football Club Lausanne-Sport,Hellas Verona,2.5,2.02,2.0,25.0,0.87,True
+Odeluga Offiah,25/26,Brighton & Hove Albion,,0.6,0.52,1.6,62.5,67.79,False
+Ilya Shkurin,24/25,Stal Mielec,Legia Warszawa,2.0,1.23,1.2,66.67,2.65,True
+Kenyel Michel,25/26,,Minnesota United FC,0.18,0.26,1.11,84.23,76.22,True
+Petar Petrovic,26/27,FK Javor-Matis Ivanjica,Sportklub Puntigamer Sturm Graz,1.7,1.44,1.0,70.0,43.65,True
+Simon Olsson,24/25,SC Heerenveen,Idrottsföreningen Elfsborg,2.0,1.21,1.0,100.0,20.55,True
