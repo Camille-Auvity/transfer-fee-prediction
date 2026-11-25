@@ -56,14 +56,24 @@ def build_error_frame(
     # Biais signé : positif = le modèle SUR-estime le montant réel, négatif = il SOUS-estime
     err["signed_pct_err"] = (err["pred_fee"] - err["actual_fee"]) / err["actual_fee"] * 100
     err["tm_abs_pct_err"] = np.abs(err["tm_val"] - err["actual_fee"]) / err["actual_fee"] * 100
+    # Résidu en échelle log (= pred_log_spread - actual_log_spread), symétrique et non borné,
+    # contrairement à l'erreur en % qui explose sur les petits transferts (ex: +1000%).
+    err["log_residual"] = np.log(err["pred_fee"]) - np.log(err["actual_fee"])
     return err
 
 
 def _grouped_summary(err: pd.DataFrame, group_col: str) -> pd.DataFrame:
+    """Mean_Signed_Pct_Err est gardée pour référence mais très sensible aux
+    quelques très gros % d'erreur sur les transferts bon marché (cf.
+    error_density.png) ; Median_Signed_Pct_Err et Median_Log_Residual sont
+    beaucoup plus robustes à ces outliers et donnent une vue plus fiable du
+    biais "typique" par segment."""
     summary = err.groupby(group_col, observed=False).agg(
         N=("abs_pct_err", "count"),
         Median_Abs_Pct_Err=("abs_pct_err", "median"),
+        Median_Signed_Pct_Err=("signed_pct_err", "median"),
         Mean_Signed_Pct_Err=("signed_pct_err", "mean"),
+        Median_Log_Residual=("log_residual", "median"),
     ).reset_index()
     return summary[summary["N"] > 0]
 
@@ -92,6 +102,7 @@ def bucket_by_time(err: pd.DataFrame, n_buckets: int = 10) -> pd.DataFrame:
         Date_Min=("date", "min"),
         Date_Max=("date", "max"),
         Model_Median_Abs_Pct_Err=("abs_pct_err", "median"),
+        Model_Median_Signed_Pct_Err=("signed_pct_err", "median"),
         Model_Mean_Signed_Pct_Err=("signed_pct_err", "mean"),
         TM_Median_Abs_Pct_Err=("tm_abs_pct_err", "median"),
     ).reset_index(drop=True)
@@ -116,13 +127,63 @@ def plot_error_over_time(time_summary: pd.DataFrame, filename: str = "error_over
     ax.legend()
 
     ax2 = axes[1]
-    colors = ["#2ecc71" if v >= 0 else "#e74c3c" for v in time_summary["Model_Mean_Signed_Pct_Err"]]
-    ax2.bar(x, time_summary["Model_Mean_Signed_Pct_Err"], color=colors)
+    width = 0.38
+    x_arr = list(x)
+    ax2.bar([i - width / 2 for i in x_arr], time_summary["Model_Mean_Signed_Pct_Err"], width=width, color="#e67e22", label="Moyenne")
+    ax2.bar([i + width / 2 for i in x_arr], time_summary["Model_Median_Signed_Pct_Err"], width=width, color="#2ecc71", label="Médiane")
     ax2.axhline(0, color="black", lw=0.8)
-    ax2.set_ylabel("Biais signé moyen (%)\n(+ = sur-estime)")
+    ax2.set_ylabel("Biais signé (%)\n(+ = sur-estime)")
+    ax2.legend(fontsize=8)
     ax2.set_xticks(list(x))
     ax2.set_xticklabels(time_summary["Period"], rotation=35, ha="right", fontsize=8)
     ax2.set_xlabel("Période (date du transfert)")
+
+    plt.tight_layout()
+    out_path = FIGURES_DIR / filename
+    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    return out_path
+
+
+def plot_error_density(err: pd.DataFrame, filename: str = "error_density.png"):
+    """Densité de l'erreur du modèle sur l'ensemble des joueurs du jeu de test.
+
+    Deux vues complémentaires :
+    - à gauche, l'erreur en % (intuitive, mais très asymétrique : une petite
+      erreur en € sur un transfert bon marché donne un % énorme) ;
+    - à droite, le résidu en échelle log (symétrique, non borné, c'est ce que
+      le modèle optimise réellement) — donne une image plus honnête de la
+      distribution, sans le renflement artificiel côté "sur-estimation" créé
+      par les gros % sur les petits transferts.
+    """
+    median_pct = err["signed_pct_err"].median()
+    mean_pct = err["signed_pct_err"].mean()
+    median_log = err["log_residual"].median()
+    mean_log = err["log_residual"].mean()
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.5))
+
+    ax = axes[0]
+    # Zoom sur la zone utile (1er-99e percentile) : les valeurs extrêmes (>1000%,
+    # petits transferts) sont réelles mais écraseraient visuellement le reste.
+    lo, hi = err["signed_pct_err"].quantile([0.01, 0.99])
+    sns.kdeplot(err["signed_pct_err"], fill=True, color="#2ecc71", ax=ax, clip=(lo, hi))
+    ax.axvline(0, color="black", lw=1, ls="-")
+    ax.axvline(median_pct, color="#2c3e50", lw=1.5, ls="--", label=f"Médiane = {median_pct:.1f}%")
+    ax.axvline(mean_pct, color="#e67e22", lw=1.5, ls=":", label=f"Moyenne = {mean_pct:.1f}%")
+    ax.set_xlim(lo, hi)
+    ax.set_title("Densité de l'erreur signée (%)\n(+ = sur-estime, − = sous-estime)")
+    ax.set_xlabel("Erreur signée (%)")
+    ax.legend(fontsize=9)
+
+    ax2 = axes[1]
+    sns.kdeplot(err["log_residual"], fill=True, color="#3498db", ax=ax2)
+    ax2.axvline(0, color="black", lw=1, ls="-")
+    ax2.axvline(median_log, color="#2c3e50", lw=1.5, ls="--", label=f"Médiane = {median_log:+.3f}")
+    ax2.axvline(mean_log, color="#e67e22", lw=1.5, ls=":", label=f"Moyenne = {mean_log:+.3f}")
+    ax2.set_title("Densité du résidu en échelle log\n(pred_log_fee − actual_log_fee)")
+    ax2.set_xlabel("Résidu (log)")
+    ax2.legend(fontsize=9)
 
     plt.tight_layout()
     out_path = FIGURES_DIR / filename
@@ -158,9 +219,12 @@ def plot_error_magnitude(breakdowns: dict, filename: str = "error_analysis_magni
 
 
 def plot_error_bias(breakdowns: dict, filename: str = "error_analysis_bias.png"):
-    """Biais directionnel (erreur signée moyenne en %) : positif = le modèle
-    paie le joueur plus cher que le montant réel (sur-estimation), négatif =
-    moins cher (sous-estimation)."""
+    """Biais directionnel par segment : positif = le modèle paie le joueur
+    plus cher que le montant réel (sur-estimation), négatif = moins cher
+    (sous-estimation). Moyenne ET médiane sont affichées côte à côte, car la
+    moyenne est tirée vers le haut par quelques très gros % d'erreur sur des
+    transferts bon marché (cf. error_density.png) — la médiane donne une vue
+    plus robuste du biais "typique" du segment."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     specs = [
         ("position", "Position", axes[0, 0]),
@@ -170,13 +234,20 @@ def plot_error_bias(breakdowns: dict, filename: str = "error_analysis_bias.png")
     ]
     for key, title, ax in specs:
         df = breakdowns[key]
-        colors = ["#e74c3c" if v < 0 else "#2ecc71" for v in df["Mean_Signed_Pct_Err"]]
-        ax.bar(df[df.columns[0]].astype(str), df["Mean_Signed_Pct_Err"], color=colors)
+        plot_df = pd.concat([
+            pd.DataFrame({"Segment": df[df.columns[0]].astype(str), "Biais (%)": df["Mean_Signed_Pct_Err"], "Statistique": "Moyenne"}),
+            pd.DataFrame({"Segment": df[df.columns[0]].astype(str), "Biais (%)": df["Median_Signed_Pct_Err"], "Statistique": "Médiane"}),
+        ])
+        sns.barplot(
+            data=plot_df, x="Segment", y="Biais (%)", hue="Statistique",
+            palette={"Moyenne": "#e67e22", "Médiane": "#2ecc71"}, ax=ax,
+        )
         ax.axhline(0, color="black", lw=0.8)
-        ax.set_title(f"Biais (%) par {title}\n(+ = sur-estime, − = sous-estime)")
+        ax.set_title(f"Biais par {title}\n(+ = sur-estime, − = sous-estime)")
         ax.set_xlabel("")
-        ax.set_ylabel("Erreur signée moyenne (%)")
+        ax.set_ylabel("Erreur signée (%)")
         ax.tick_params(axis="x", rotation=20)
+        ax.legend(fontsize=8)
 
     plt.tight_layout()
     out_path = FIGURES_DIR / filename

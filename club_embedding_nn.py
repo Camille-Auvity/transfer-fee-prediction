@@ -13,7 +13,7 @@ Usage:
     python club_embedding_nn.py
 """
 
-from src import calibration, data_loading, dataset, evaluation, features, models, neural_net
+from src import calibration, data_loading, dataset, error_analysis, evaluation, features, models, neural_net
 from src.config import TABLES_DIR
 
 
@@ -64,6 +64,18 @@ def main():
     print("\n--- Classification binaire (prime vs. décote) ---")
     print(classification_df.round(4))
     classification_df.round(4).to_csv(TABLES_DIR / "nn_classification_comparison.csv", index=False)
+
+    print("\n" + "=" * 70)
+    print("6. Biais par segment : XGBoost vs. NN (moyenne vs. médiane)")
+    print("=" * 70)
+    err_xgb = error_analysis.build_error_frame(transfer_full_raw, split.df_model, split.X_test, split.y_test, baseline.predictions["XGBoost (Pseudo-Huber)"])
+    err_nn = error_analysis.build_error_frame(transfer_full_raw, split.df_model, split.X_test, split.y_test, nn_preds)
+
+    for group_col in ["position", "league_to"]:
+        comparison = calibration.bias_before_after_table(err_xgb, err_nn, group_col, label_a="XGBoost", label_b="NN")
+        print(f"\n--- Biais par {group_col} ---")
+        print(comparison)
+        comparison.to_csv(TABLES_DIR / f"nn_bias_by_{group_col}.csv")
 
     print("\nTerminé. Tableaux -> outputs/tables/nn_*.csv")
 

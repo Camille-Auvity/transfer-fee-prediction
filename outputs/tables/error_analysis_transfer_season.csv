@@ -1,4 +1,4 @@
-transfer_season,N,Median_Abs_Pct_Err,Mean_Signed_Pct_Err
-24/25,772,42.48,30.55
-25/26,2228,36.33,19.71
-26/27,152,33.65,32.27
+transfer_season,N,Median_Abs_Pct_Err,Median_Signed_Pct_Err,Mean_Signed_Pct_Err,Median_Log_Residual
+24/25,772,42.48,-1.23,30.55,-0.01
+25/26,2228,36.33,-5.97,19.71,-0.06
+26/27,152,33.65,5.13,32.27,0.05

@@ -42,7 +42,8 @@ chaque exécution de `main.py`. Exemples :
 ├── main.py                 # Point d'entrée : exécute tout le pipeline
 ├── tune_models.py          # Script optionnel : tuning d'hyperparamètres (RandomizedSearchCV)
 ├── error_analysis.py       # Script optionnel : analyse d'erreurs par segment et dans le temps
-├── calibrate_model.py      # Script optionnel : test de calibration isotonique (résultat négatif)
+├── calibrate_model.py      # Script optionnel : test de calibration isotonique (résultat nuancé)
+├── club_embedding_nn.py    # Script optionnel : réseau de neurones avec embeddings de club
 ├── src/
 │   ├── config.py            # Chemins et constantes
 │   ├── data_loading.py      # Chargement + fusion clubs / transfer_panel
@@ -55,7 +56,8 @@ chaque exécution de `main.py`. Exemples :
 │   ├── examples.py           # Exemples de transferts du jeu de test, graphiques finaux
 │   ├── tuning.py             # Grilles de recherche + comparaison baseline/tuné/benchmark
 │   ├── error_analysis.py     # Segmentation de l'erreur (position/âge/championnat/temps)
-│   └── calibration.py        # Calibration isotonique XGBoost (fit/calib/test chronologiques)
+│   ├── calibration.py        # Calibration isotonique XGBoost (fit/calib/test chronologiques)
+│   └── neural_net.py         # Réseau de neurones + embeddings de club (PyTorch)
 ├── outputs/
 │   ├── figures/              # PNG générés par le pipeline
 │   └── tables/                # CSV des tableaux de résultats
@@ -156,27 +158,54 @@ directionnel (sur- ou sous-estimation systématique, pas juste l'erreur absolue)
 python error_analysis.py
 ```
 
-Principaux constats :
-- Le modèle **sur-estime systématiquement** les montants, à des degrés très
-  différents selon le championnat : **+50.8%** pour La Liga (ES1) contre
-  seulement **+8.5%** pour la Premier League (GB1) — cohérent avec les
-  contraintes financières connues des clubs espagnols (Fair-Play Financier).
-- Les **gardiens** (+45.7%) et les **moins de 21 ans** (+26.4%) sont aussi
-  nettement plus sur-estimés que la moyenne.
+**Attention moyenne vs. médiane** : l'erreur en % est très asymétrique (une
+petite erreur en € sur un transfert bon marché donne un % énorme) — voir
+[`outputs/figures/error_density.png`](outputs/figures/error_density.png). La
+**moyenne** du biais est donc tirée vers le haut par une poignée d'outliers ;
+la **médiane** donne une image bien plus fiable du biais "typique" d'un
+segment. Les deux sont calculées partout, mais c'est la médiane qui doit
+servir à conclure.
+
+Principaux constats (médiane) :
+- Le modèle n'est **pas vraiment en sur-estimation généralisée** : la plupart
+  des positions, tranches d'âge et championnats ont un biais médian proche de
+  zéro, voire légèrement négatif (légère sous-estimation).
+- Deux exceptions nettes et robustes : les **gardiens** (+13.5% de biais
+  médian) et les transferts vers **La Liga (ES1)** (+10.0%) — tout le reste
+  est dans une fourchette de -7% à +2%.
 - Dans le temps, l'erreur est **stable** sur les ~2 ans du jeu de test : le
-  modèle bat Transfermarkt seul sur **chaque** tranche chronologique, sans
-  exception — l'avantage n'est pas un coup de chance concentré sur une période.
+  modèle bat Transfermarkt seul (en erreur absolue) sur **chaque** tranche
+  chronologique, sans exception — l'avantage n'est pas un coup de chance
+  concentré sur une période.
 
 ![Évolution de l'erreur dans le temps, modèle vs. Transfermarkt seul](outputs/figures/error_over_time.png)
 
-**Piste testée et abandonnée** : [`calibrate_model.py`](calibrate_model.py)
-essaie de corriger ce biais avec une régression isotonique (prédiction brute →
-valeur corrigée), apprise sur une portion du train set jamais utilisée pour
-l'entraînement. Résultat **négatif** : la correction aggrave le biais sur le
-test set, car le biais mesuré n'est pas stable dans le temps (la fenêtre de
-calibration et le test set n'ont pas le même biais). Conservé dans le dépôt
-comme exemple de vérification out-of-sample qui a bien fait son travail —
-mieux vaut un résultat négatif détecté que des faux espoirs.
+**Piste testée — résultat nuancé** : [`calibrate_model.py`](calibrate_model.py)
+essaie de corriger le biais ES1/gardiens avec une régression isotonique
+(prédiction brute → valeur corrigée), apprise sur une portion du train set
+jamais utilisée pour l'entraînement, puis vérifiée une seule fois sur le test
+set. En regardant seulement la moyenne, la correction semble empirer le biais
+partout. **Mais en médiane** (voir `outputs/tables/calibration_bias_by_*.csv`),
+elle améliore en fait la majorité des segments (attaquants, défenseurs,
+milieux, la plupart des championnats) et dégrade spécifiquement les segments
+déjà les plus atypiques (gardiens, La Liga, Bundesliga) — parce que la
+correction est globale (un seul mapping pour tout le monde), dominée par les
+segments majoritaires, et overcorrige les minoritaires. Sur les métriques
+globales (R², MAE), l'effet reste quasi neutre. Conservée dans le dépôt comme
+exemple de vérification rigoureuse qui a changé deux fois de conclusion selon
+la métrique utilisée — une bonne leçon de méthode en soi.
+
+**Piste testée — réseau de neurones avec embeddings de club** :
+[`club_embedding_nn.py`](club_embedding_nn.py) teste si un petit réseau de
+neurones avec des embeddings pour `from_club_id`/`to_club_id` (actuellement
+ignorés comme features) peut capter un effet club-spécifique et réduire le
+biais ES1. Résultat : le NN reste nettement meilleur que Transfermarkt seul
+mais **moins bon que XGBoost** (R² 0.812 vs. 0.825) — attendu avec seulement
+~10 700 lignes d'entraînement pour du deep learning. Le biais ES1 n'est **pas
+corrigé** (+10.5% vs. +10.0% pour XGBoost), et les gardiens empirent nettement
+(+13.5% → +23.9%) : avec ~1900 clubs distincts pour si peu de données, les
+embeddings n'ont pas assez d'exemples par club pour apprendre un vrai effet
+club-spécifique.
 
 ## Notebook original
 

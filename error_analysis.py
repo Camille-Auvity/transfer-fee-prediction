@@ -62,10 +62,14 @@ def main():
     error_analysis.plot_error_magnitude(breakdowns)
     error_analysis.plot_error_bias(breakdowns)
     error_analysis.plot_error_over_time(time_summary)
+    error_analysis.plot_error_density(err)
+
+    print(f"\nErreur signée : médiane={err['signed_pct_err'].median():.1f}% | moyenne={err['signed_pct_err'].mean():.1f}%")
+    print("(la moyenne est tirée vers le haut par de gros % d'erreur sur des transferts bon marché)")
 
     print("\nTerminé.")
     print("  Tableaux -> outputs/tables/error_analysis_*.csv")
-    print("  Graphiques -> outputs/figures/error_analysis_magnitude.png, error_analysis_bias.png, error_over_time.png")
+    print("  Graphiques -> outputs/figures/error_analysis_magnitude.png, error_analysis_bias.png, error_over_time.png, error_density.png")
 
 
 if __name__ == "__main__":
