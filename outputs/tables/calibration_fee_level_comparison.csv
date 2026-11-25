@@ -1,0 +1,4 @@
+Model,R2 (log_fee),R2 (EUR fee),MAE (EUR M),RMSE (EUR M),Median % Err,Within ±20%,Within ±30%
+XGBoost (calibrated),0.82,0.853,1.704,3.841,38.785,26.142,38.896
+XGBoost (raw),0.82,0.861,1.68,3.726,39.155,25.92,38.642
+Transfermarkt Alone (spread=0),0.738,0.833,1.888,4.088,47.059,23.668,35.977
