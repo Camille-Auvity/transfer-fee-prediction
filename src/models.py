@@ -27,6 +27,14 @@ LINEAR_DROP_COLS = [
 ]
 ZERO_IMPUTE_COLS = ["prev_log_spread", "value_momentum"]
 
+# Hyperparamètres tunés via tune_models.py (voir outputs/tables/best_hyperparameters.json),
+# extraits ici pour être réutilisés tels quels par src/calibration.py.
+XGBOOST_PARAMS = dict(
+    objective="reg:pseudohubererror", n_estimators=684, learning_rate=0.016424199098700288, max_depth=5,
+    min_child_weight=7, subsample=0.6682096494749166, colsample_bytree=0.9140703845572055,
+    reg_lambda=5.3848112391315635, random_state=RANDOM_STATE, n_jobs=-1,
+)
+
 
 @dataclass
 class TrainedModels:
@@ -118,11 +126,7 @@ def train_tree_models(X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.Data
     print("Trained LightGBM (Huber)")
 
     # 3. XGBoost (handles NaNs natively) — hyperparamètres tunés (voir ci-dessus)
-    xgb = XGBRegressor(
-        objective="reg:pseudohubererror", n_estimators=684, learning_rate=0.016424199098700288, max_depth=5,
-        min_child_weight=7, subsample=0.6682096494749166, colsample_bytree=0.9140703845572055,
-        reg_lambda=5.3848112391315635, random_state=RANDOM_STATE, n_jobs=-1,
-    )
+    xgb = XGBRegressor(**XGBOOST_PARAMS)
     xgb.fit(X_train, y_train)
     result.predictions["XGBoost (Pseudo-Huber)"] = xgb.predict(X_test)
     result.fitted_models["XGBoost (Pseudo-Huber)"] = xgb

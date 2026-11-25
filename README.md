@@ -41,6 +41,8 @@ chaque exécution de `main.py`. Exemples :
 .
 ├── main.py                 # Point d'entrée : exécute tout le pipeline
 ├── tune_models.py          # Script optionnel : tuning d'hyperparamètres (RandomizedSearchCV)
+├── error_analysis.py       # Script optionnel : analyse d'erreurs par segment et dans le temps
+├── calibrate_model.py      # Script optionnel : test de calibration isotonique (résultat négatif)
 ├── src/
 │   ├── config.py            # Chemins et constantes
 │   ├── data_loading.py      # Chargement + fusion clubs / transfer_panel
@@ -51,7 +53,9 @@ chaque exécution de `main.py`. Exemples :
 │   ├── evaluation.py         # Métriques de régression/classification, diagnostics
 │   ├── tier_models.py        # XGBoost par tranche de valorisation vs. modèle global
 │   ├── examples.py           # Exemples de transferts du jeu de test, graphiques finaux
-│   └── tuning.py             # Grilles de recherche + comparaison baseline/tuné/benchmark
+│   ├── tuning.py             # Grilles de recherche + comparaison baseline/tuné/benchmark
+│   ├── error_analysis.py     # Segmentation de l'erreur (position/âge/championnat/temps)
+│   └── calibration.py        # Calibration isotonique XGBoost (fit/calib/test chronologiques)
 ├── outputs/
 │   ├── figures/              # PNG générés par le pipeline
 │   └── tables/                # CSV des tableaux de résultats
@@ -138,6 +142,41 @@ dans l'absolu — la vraie différence de performance est entre "un modèle ML" 
 "Transfermarkt seul", pas entre "tuné" et "pas tuné" (voir
 [`outputs/figures/tuning_vs_benchmark.png`](outputs/figures/tuning_vs_benchmark.png)
 et [`outputs/figures/xgboost_hyperparam_evolution.png`](outputs/figures/xgboost_hyperparam_evolution.png)).
+
+## Analyse d'erreurs (optionnel)
+
+[`error_analysis.py`](error_analysis.py) va plus loin que la segmentation par
+tranche de valorisation du pipeline principal : il regarde où et quand le
+meilleur modèle (XGBoost) se trompe le plus, par **position**, **âge**,
+**championnat du club acheteur**, **saison du transfert**, et par **tranche
+chronologique** — avec à chaque fois l'ampleur de l'erreur *et* le biais
+directionnel (sur- ou sous-estimation systématique, pas juste l'erreur absolue).
+
+```bash
+python error_analysis.py
+```
+
+Principaux constats :
+- Le modèle **sur-estime systématiquement** les montants, à des degrés très
+  différents selon le championnat : **+50.8%** pour La Liga (ES1) contre
+  seulement **+8.5%** pour la Premier League (GB1) — cohérent avec les
+  contraintes financières connues des clubs espagnols (Fair-Play Financier).
+- Les **gardiens** (+45.7%) et les **moins de 21 ans** (+26.4%) sont aussi
+  nettement plus sur-estimés que la moyenne.
+- Dans le temps, l'erreur est **stable** sur les ~2 ans du jeu de test : le
+  modèle bat Transfermarkt seul sur **chaque** tranche chronologique, sans
+  exception — l'avantage n'est pas un coup de chance concentré sur une période.
+
+![Évolution de l'erreur dans le temps, modèle vs. Transfermarkt seul](outputs/figures/error_over_time.png)
+
+**Piste testée et abandonnée** : [`calibrate_model.py`](calibrate_model.py)
+essaie de corriger ce biais avec une régression isotonique (prédiction brute →
+valeur corrigée), apprise sur une portion du train set jamais utilisée pour
+l'entraînement. Résultat **négatif** : la correction aggrave le biais sur le
+test set, car le biais mesuré n'est pas stable dans le temps (la fenêtre de
+calibration et le test set n'ont pas le même biais). Conservé dans le dépôt
+comme exemple de vérification out-of-sample qui a bien fait son travail —
+mieux vaut un résultat négatif détecté que des faux espoirs.
 
 ## Notebook original
 

@@ -1,0 +1,5 @@
+position,N,Median_Abs_Pct_Err,Mean_Signed_Pct_Err
+Attack,1208,37.35,20.88
+Defender,882,37.55,22.81
+Goalkeeper,182,46.0,45.7
+Midfield,880,36.27,21.32
