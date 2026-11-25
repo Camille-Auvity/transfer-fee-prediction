@@ -1,16 +1,16 @@
 Player,transfer_season,name_from,name_to,TM_Val (€M),Pred_Fee (€M),Actual_Fee (€M),TM_Err (%),Model_Err (%),Beat_TM
-Alexander Isak,25/26,Newcastle United,Liverpool FC,120.0,134.56,145.0,17.24,7.2,True
-Florian Wirtz,25/26,Bayer 04 Leverkusen,Liverpool FC,140.0,146.49,125.0,12.0,17.19,False
-Hugo Ekitiké,25/26,Eintracht Frankfurt,Liverpool FC,75.0,84.74,95.0,21.05,10.8,True
-Khvicha Kvaratskhelia,24/25,SSC Napoli,Paris Saint-Germain,85.0,78.76,80.0,6.25,1.55,True
-Anthony Gordon,26/27,Newcastle United,FC Barcelona,65.0,61.2,80.0,18.75,23.5,False
-Jhon Durán,24/25,Aston Villa,Al-Nassr Football Club,40.0,53.12,77.0,48.05,31.01,True
-Benjamin Sesko,25/26,RB Leipzig,Manchester United,70.0,87.8,76.5,8.5,14.77,False
-Bryan Mbeumo,25/26,Brentford FC,Manchester United,55.0,54.37,75.0,26.67,27.51,False
-Nick Woltemade,25/26,VfB Stuttgart,Newcastle United,30.0,36.49,75.0,60.0,51.34,True
-Victor Osimhen,25/26,SSC Napoli,Galatasaray,70.0,50.84,75.0,6.67,32.22,False
-Omar Marmoush,24/25,Eintracht Frankfurt,Manchester City,60.0,61.8,75.0,20.0,17.6,True
-Matheus Cunha,25/26,Wolverhampton Wanderers,Manchester United,60.0,61.07,74.2,19.14,17.69,True
-Antoine Semenyo,25/26,AFC Bournemouth,Manchester City,65.0,67.32,72.0,9.72,6.5,True
-Luis Díaz,25/26,Liverpool FC,Bayern Munich,70.0,60.33,70.0,0.0,13.81,False
-Martín Zubimendi,25/26,Real Sociedad,Arsenal FC,60.0,51.72,70.0,14.29,26.11,False
+Alexander Isak,25/26,Newcastle United,Liverpool FC,120.0,136.83,145.0,17.24,5.63,True
+Florian Wirtz,25/26,Bayer 04 Leverkusen,Liverpool FC,140.0,139.39,125.0,12.0,11.51,True
+Hugo Ekitiké,25/26,Eintracht Frankfurt,Liverpool FC,75.0,83.17,95.0,21.05,12.45,True
+Khvicha Kvaratskhelia,24/25,SSC Napoli,Paris Saint-Germain,85.0,77.78,80.0,6.25,2.78,True
+Anthony Gordon,26/27,Newcastle United,FC Barcelona,65.0,59.47,80.0,18.75,25.66,False
+Jhon Durán,24/25,Aston Villa,Al-Nassr Football Club,40.0,56.15,77.0,48.05,27.08,True
+Benjamin Sesko,25/26,RB Leipzig,Manchester United,70.0,93.95,76.5,8.5,22.81,False
+Bryan Mbeumo,25/26,Brentford FC,Manchester United,55.0,52.47,75.0,26.67,30.04,False
+Nick Woltemade,25/26,VfB Stuttgart,Newcastle United,30.0,32.81,75.0,60.0,56.25,True
+Victor Osimhen,25/26,SSC Napoli,Galatasaray,70.0,47.48,75.0,6.67,36.69,False
+Omar Marmoush,24/25,Eintracht Frankfurt,Manchester City,60.0,62.22,75.0,20.0,17.04,True
+Matheus Cunha,25/26,Wolverhampton Wanderers,Manchester United,60.0,61.37,74.2,19.14,17.29,True
+Antoine Semenyo,25/26,AFC Bournemouth,Manchester City,65.0,64.28,72.0,9.72,10.73,False
+Luis Díaz,25/26,Liverpool FC,Bayern Munich,70.0,58.27,70.0,0.0,16.75,False
+Martín Zubimendi,25/26,Real Sociedad,Arsenal FC,60.0,48.59,70.0,14.29,30.58,False

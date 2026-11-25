@@ -81,20 +81,24 @@ def train_tree_models(X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.Data
     """Entraîne les modèles d'arbres/boosting et ajoute leurs prédictions à `result` (in place)."""
     # 1. Scikit-learn tree models (always available)
     # HistGradientBoosting handles NaNs natively
+    # Hyperparamètres tunés via tune_models.py (RandomizedSearchCV, TimeSeriesSplit,
+    # gain confirmé out-of-sample sur le jeu de test chronologique) — voir
+    # outputs/tables/best_hyperparameters.json et tuned_vs_baseline.csv
     hgb = HistGradientBoostingRegressor(
-        loss="absolute_error", max_depth=4, learning_rate=0.05, max_iter=300,
-        min_samples_leaf=30, l2_regularization=5.0, random_state=RANDOM_STATE,
+        loss="absolute_error", max_depth=6, learning_rate=0.03683895479362275, max_iter=494,
+        min_samples_leaf=58, l2_regularization=0.5364813719603044, random_state=RANDOM_STATE,
     )
     hgb.fit(X_train, y_train)
     result.predictions["HistGradientBoosting (MAE)"] = hgb.predict(X_test)
     result.fitted_models["HistGradientBoosting (MAE)"] = hgb
     print("Trained HistGradientBoosting (MAE)")
 
-    # Random Forest (median imputation inside pipeline)
+    # Random Forest (median imputation inside pipeline) — hyperparamètres tunés (voir ci-dessus)
     rf_pipe = Pipeline([
         ("imp", SimpleImputer(strategy="median")),
         ("model", RandomForestRegressor(
-            n_estimators=300, max_depth=10, min_samples_leaf=20, n_jobs=-1, random_state=RANDOM_STATE,
+            n_estimators=539, max_depth=14, min_samples_leaf=6, max_features=0.5132296384213595,
+            n_jobs=-1, random_state=RANDOM_STATE,
         )),
     ])
     rf_pipe.fit(X_train, y_train)
@@ -113,11 +117,11 @@ def train_tree_models(X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.Data
     result.fitted_models["LightGBM (Huber)"] = lgbm
     print("Trained LightGBM (Huber)")
 
-    # 3. XGBoost (handles NaNs natively)
+    # 3. XGBoost (handles NaNs natively) — hyperparamètres tunés (voir ci-dessus)
     xgb = XGBRegressor(
-        objective="reg:pseudohubererror", n_estimators=400, learning_rate=0.03, max_depth=4,
-        min_child_weight=20, subsample=0.8, colsample_bytree=0.8, reg_lambda=5.0,
-        random_state=RANDOM_STATE, n_jobs=-1,
+        objective="reg:pseudohubererror", n_estimators=684, learning_rate=0.016424199098700288, max_depth=5,
+        min_child_weight=7, subsample=0.6682096494749166, colsample_bytree=0.9140703845572055,
+        reg_lambda=5.3848112391315635, random_state=RANDOM_STATE, n_jobs=-1,
     )
     xgb.fit(X_train, y_train)
     result.predictions["XGBoost (Pseudo-Huber)"] = xgb.predict(X_test)

@@ -19,7 +19,7 @@ facilement et partagé sur Git.
 | Approche | R² sur log(Montant) | Erreur médiane sur le montant |
 |---|---|---|
 | Transfermarkt seul | 0.738 | ~47.1 % |
-| **XGBoost (meilleur modèle)** | **0.823** | **~38.2 %** |
+| **XGBoost (meilleur modèle, hyperparamètres tunés)** | **0.825** | **~37.5 %** |
 
 (voir le détail complet, modèle par modèle, dans `outputs/tables/final_fee_comparison.csv`)
 
@@ -40,6 +40,7 @@ chaque exécution de `main.py`. Exemples :
 ```
 .
 ├── main.py                 # Point d'entrée : exécute tout le pipeline
+├── tune_models.py          # Script optionnel : tuning d'hyperparamètres (RandomizedSearchCV)
 ├── src/
 │   ├── config.py            # Chemins et constantes
 │   ├── data_loading.py      # Chargement + fusion clubs / transfer_panel
@@ -49,7 +50,8 @@ chaque exécution de `main.py`. Exemples :
 │   ├── models.py             # Entraînement des modèles (linéaires + arbres/boosting)
 │   ├── evaluation.py         # Métriques de régression/classification, diagnostics
 │   ├── tier_models.py        # XGBoost par tranche de valorisation vs. modèle global
-│   └── examples.py           # Exemples de transferts du jeu de test, graphiques finaux
+│   ├── examples.py           # Exemples de transferts du jeu de test, graphiques finaux
+│   └── tuning.py             # Grilles de recherche + comparaison baseline/tuné/benchmark
 ├── outputs/
 │   ├── figures/              # PNG générés par le pipeline
 │   └── tables/                # CSV des tableaux de résultats
@@ -115,6 +117,27 @@ données fait ~17 000 transferts avec un montant connu).
 5. **Évaluation** : MAE/RMSE/R² sur `log_spread`, classification binaire
    (prime vs. décote par rapport à la valeur Transfermarkt), erreur en € sur
    le montant final, et analyse par tranche de valorisation du joueur.
+
+## Tuning des hyperparamètres (optionnel)
+
+[`tune_models.py`](tune_models.py) lance un `RandomizedSearchCV` (avec un
+`TimeSeriesSplit`, pas un K-Fold classique, pour rester cohérent avec le split
+chronologique) sur XGBoost, LightGBM, HistGradientBoosting et RandomForest, puis
+vérifie le gain sur le jeu de test chronologique — jamais utilisé pendant la
+recherche — pour s'assurer qu'il tient vraiment "out of sample" et n'est pas un
+artefact du cross-validation.
+
+```bash
+python tune_models.py --n-iter 25
+```
+
+Résultat : gain confirmé out-of-sample pour XGBoost, HistGradientBoosting et
+RandomForest (déjà intégré dans `src/models.py`) ; pas de gain pour LightGBM,
+dont les hyperparamètres d'origine ont donc été conservés. Le gain reste modeste
+dans l'absolu — la vraie différence de performance est entre "un modèle ML" et
+"Transfermarkt seul", pas entre "tuné" et "pas tuné" (voir
+[`outputs/figures/tuning_vs_benchmark.png`](outputs/figures/tuning_vs_benchmark.png)
+et [`outputs/figures/xgboost_hyperparam_evolution.png`](outputs/figures/xgboost_hyperparam_evolution.png)).
 
 ## Notebook original
 
