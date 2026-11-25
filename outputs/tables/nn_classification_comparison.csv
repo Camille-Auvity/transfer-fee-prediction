@@ -1,0 +1,3 @@
+Model,R2 (log_spread),MAE,RMSE,Spearman r,Dir. Accuracy,ROC-AUC,Precision,Recall,F1
+XGBoost (Pseudo-Huber),0.284,0.5086,0.655,0.5241,0.7192,0.7584,0.6752,0.4718,0.5555
+NN (embeddings club),0.2285,0.5281,0.6799,0.4781,0.7053,0.7421,0.6385,0.4778,0.5466
