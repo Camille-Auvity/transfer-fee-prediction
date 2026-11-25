@@ -64,12 +64,8 @@ def main():
     err_calibrated = error_analysis.build_error_frame(transfer_full_raw, split.df_model, split.X_test, split.y_test, calibrated_preds)
 
     for group_col in ["position", "age_bucket", "league_to"]:
-        raw_bias = err_raw.groupby(group_col, observed=False)["signed_pct_err"].mean()
-        calib_bias = err_calibrated.groupby(group_col, observed=False)["signed_pct_err"].mean()
-        comparison = pd.concat(
-            [raw_bias.rename("Biais avant (%)"), calib_bias.rename("Biais après (%)")], axis=1
-        ).round(2)
-        print(f"\n--- Biais par {group_col} ---")
+        comparison = calibration.bias_before_after_table(err_raw, err_calibrated, group_col)
+        print(f"\n--- Biais par {group_col} (moyenne vs. médiane, avant/après) ---")
         print(comparison)
         comparison.to_csv(TABLES_DIR / f"calibration_bias_by_{group_col}.csv")
 

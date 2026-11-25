@@ -1,5 +1,5 @@
-position,Biais avant (%),Biais après (%)
-Attack,16.02,26.12
-Defender,17.26,27.57
-Goalkeeper,47.05,60.42
-Midfield,17.69,27.67
+position,Avant - Moyenne,Avant - Médiane,Après - Moyenne,Après - Médiane
+Attack,16.02,-11.08,26.12,-3.48
+Defender,17.26,-7.98,27.57,-2.01
+Goalkeeper,47.05,12.61,60.42,20.58
+Midfield,17.69,-7.65,27.67,-0.91

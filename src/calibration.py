@@ -90,25 +90,54 @@ def plot_isotonic_curve(calibrator: IsotonicRegression, raw_calib_preds: np.ndar
     return out_path
 
 
-def plot_bias_before_after(err_raw: pd.DataFrame, err_calibrated: pd.DataFrame, group_col: str, title: str, filename: str):
-    """Compare le biais directionnel moyen (%) avant/après calibration, pour une dimension donnée."""
-    def grouped(err, label):
-        g = err.groupby(group_col, observed=False)["signed_pct_err"].mean().reset_index()
+def bias_before_after_table(
+    err_a: pd.DataFrame, err_b: pd.DataFrame, group_col: str,
+    label_a: str = "Avant", label_b: str = "Après",
+) -> pd.DataFrame:
+    """Biais moyen ET médian pour deux variantes d'un modèle (ex: avant/après
+    calibration, ou XGBoost vs. NN), pour une dimension donnée. La moyenne est
+    sensible aux gros % d'erreur sur les transferts bon marché (cf.
+    error_density.png) ; la médiane est plus robuste et donne le verdict le
+    plus fiable sur l'effet réel observé."""
+    a = err_a.groupby(group_col, observed=False)["signed_pct_err"].agg(["mean", "median"])
+    b = err_b.groupby(group_col, observed=False)["signed_pct_err"].agg(["mean", "median"])
+    out = pd.concat(
+        [a["mean"].rename(f"{label_a} - Moyenne"), a["median"].rename(f"{label_a} - Médiane"),
+         b["mean"].rename(f"{label_b} - Moyenne"), b["median"].rename(f"{label_b} - Médiane")],
+        axis=1,
+    )
+    return out.round(2)
+
+
+def plot_bias_before_after(
+    err_a: pd.DataFrame, err_b: pd.DataFrame, group_col: str, title: str, filename: str,
+    label_a: str = "Avant calibration", label_b: str = "Après calibration",
+):
+    """Compare le biais directionnel entre deux variantes d'un modèle, pour une
+    dimension donnée — moyenne (sensible aux outliers) et médiane (robuste)
+    côte à côte."""
+    def grouped(err, label, stat):
+        g = err.groupby(group_col, observed=False)["signed_pct_err"].agg(stat).reset_index()
         g["Version"] = label
         return g
 
-    plot_df = pd.concat([grouped(err_raw, "Avant calibration"), grouped(err_calibrated, "Après calibration")])
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5.5))
+    for ax, stat, stat_label in [(axes[0], "mean", "Moyenne"), (axes[1], "median", "Médiane")]:
+        plot_df = pd.concat([
+            grouped(err_a, label_a, stat),
+            grouped(err_b, label_b, stat),
+        ])
+        sns.barplot(
+            data=plot_df, x=group_col, y="signed_pct_err", hue="Version", ax=ax,
+            palette={label_a: "#e67e22", label_b: "#2ecc71"},
+        )
+        ax.axhline(0, color="black", lw=0.8)
+        ax.set_title(f"{stat_label} — {title}")
+        ax.set_xlabel("")
+        ax.set_ylabel(f"Erreur signée ({stat_label.lower()}, %)")
+        ax.tick_params(axis="x", rotation=20)
 
-    plt.figure(figsize=(9, 5.5))
-    sns.barplot(
-        data=plot_df, x=group_col, y="signed_pct_err", hue="Version",
-        palette={"Avant calibration": "#e67e22", "Après calibration": "#2ecc71"},
-    )
-    plt.axhline(0, color="black", lw=0.8)
-    plt.title(f"Biais (%) avant/après calibration — {title}\n(+ = sur-estime, − = sous-estime)")
-    plt.xlabel("")
-    plt.ylabel("Erreur signée moyenne (%)")
-    plt.xticks(rotation=20)
+    fig.suptitle(f"{label_a} vs. {label_b} (+ = sur-estime, − = sous-estime)")
     plt.tight_layout()
     out_path = FIGURES_DIR / filename
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
